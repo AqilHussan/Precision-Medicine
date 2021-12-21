@@ -60,7 +60,7 @@ oversample =SMOTE()
 X, Y = oversample.fit_resample(X, Y)
 ```
 
-## Selected Features
+### Selected Features
 
 'RID',
  'PTID',
@@ -77,22 +77,22 @@ X, Y = oversample.fit_resample(X, Y)
  'FDG_bl',
  'M'
  
- ## Performance of the RF for the two layers 
+ ### Performance of the RF for the two layers 
  
  Layers | #1 | #2 
 --- | --- | --- 
 Accuracy | 73% | 91%
 
-## Feature contribution - Layer 1
+### Feature contribution - Layer 1
 ![alt text](https://github.com/AqilHussan/Precision-Medicine/blob/main/data/Level1Feature.PNG)
-## Feature contribution - Layer 2
+### Feature contribution - Layer 2
 ![alt text](https://github.com/AqilHussan/Precision-Medicine/blob/main/data/Level2Feature.PNG)
 
 ## ADNI_ENSEMBLE_Ver_1_2
 The model has two main layers. Each layer has a classifer based on Ensemble method with 2 Random Forrest classifiers.
 No changes done in the data preprocessing
 
-## Selected Features
+### Selected Features
 Whole
 
 ### Ensemble Method
@@ -105,15 +105,15 @@ estimators=[ ('rf1', rf1), ('rf2', rf2)]
 #create our voting classifier, inputting our models
 ensemble = VotingClassifier(estimators, voting='hard')
 ```
-## Performance of the RF for the two layers 
+### Performance of the RF for the two layers 
  
  Layers | #1 | #2 
 --- | --- | --- 
 Accuracy | 93.9% | 99.4%
 
-## Feature contribution - Layer 1
+### Feature contribution - Layer 1
 ![alt text](https://github.com/AqilHussan/Precision-Medicine/blob/main/data/EnsembleLayer1.PNG)
-## Feature contribution - Layer 2
+### Feature contribution - Layer 2
 ![alt text](https://github.com/AqilHussan/Precision-Medicine/blob/main/data/EnsembleLayer2.PNG)
 
 

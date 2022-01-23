@@ -231,12 +231,14 @@ start-yarn.sh
 #Check if all the daemons are running using the following command
 jps
 ```
-##Hadoop UI
+## Hadoop UI
 
 The Hadoop user interface can be accessed using a browser with different addresses. 
 
 **NameNode UI** : http://localhost:9870
+
 **Individual DataNodes** : http://localhost:9864
+
 **YARN Resource Manager** : http://localhost:8088
 
-###WIP
+### WIP

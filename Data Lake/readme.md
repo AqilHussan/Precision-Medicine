@@ -25,17 +25,19 @@ sudo apt install openssh-server openssh-client -y
 It is recommended to create a new user (without sudo privileges) on the system for running the Hadoop daemons. 
 
 ```
-# add a new user with username hdoop (can be anything you choose)
-sudo adduser hdoop
+# add a new user with username pma (can be anything you choose)
+sudo adduser pma
 
-# switch user to hdoop
-su - hdoop
+# switch user to pma
+su - pma
 ```
 **Enable passwordless SSH for hdoop**
 Run all these lines separately and go through the prompts as required.
 ```
 #Generate a public/private rsa key pair or SSH key pair
-ssh-keygen -t rsa -P" -f ~/.ssh/id_rsa
+ssh-keygen -t rsa -P ""
+
+# Press Enter to choose to save the key in the given directory, otherwise enter new directory
 
 #Store the generated key as an authorized key
 cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
@@ -53,11 +55,11 @@ Now that the prerequisites have been satisfied, a single node Hadoop cluster (ps
 Visit https://hadoop.apache.org/releases.html to check the release version of Hadoop currently being rolled out and get the download link for the **tar** binary package. 
 
 ```
-wget https://dlcdn.apache.org/hadoop/common/hadoop-3.3.1/hadoop-3.3.1.tar.gz
-tar xzf hadoop-3.3.1.tar.gz
-mv hadoop-3.3.1 hadoop
+wget https://dlcdn.apache.org/hadoop/common/hadoop-3.3.2/hadoop-3.3.2.tar.gz
+tar xzf hadoop-3.3.2.tar.gz
+mv hadoop-3.3.2 hadoop
 ```
-Now, the hadoop-3.3.1 binary files are located in the folder hadoop.
+Now, hadoop-3.3.2 binary files are located in the folder hadoop.
 
 ## Single Node Cluster (Pseudo-Distributed cluster)
 
@@ -86,7 +88,7 @@ export HADOOP_HDFS_HOME=$HADOOP_HOME
 export YARN_HOME=$HADOOP_HOME
 export HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_HOME/lib/native
 export PATH=$PATH:$HADOOP_HOME/sbin:$HADOOP_HOME/bin
-export HADOOP_OPTS"-Djava.library.path=$HADOOP_HOME/lib/native"
+export HADOOP_OPTS="-Djava.library.path=$HADOOP_HOME/lib/native"
 ```
 To apply the changes to the current running environmen, use the following command in the terminal. 
 ```
@@ -125,19 +127,19 @@ Add the following to the file
 <configuration>
   <property>
     <name>hadoop.tmp.dir</name>
-    <value>/home/hdoop/tmpdata</value>
+    <value>/home/pma/tmpdata</value>
   </property>
   <property>
     <name>fs.default.name</name>
     <value>hdfs://127.0.0.1:9000</value>
-    </property>
+  </property>
 </configuration>
 ```
 Also create a directory where the temporary data was to stored for the map and reduce process. 
 ```
-mkdir ~/hdoop/tmpdata
+mkdir /home/pma/tmpdata
 ```
-This creates `/hdoop/tmpdata` in the `HOME` directory as defined in _core-site.xml_. 
+This creates `tmpdata` in the `HOME` directory as defined in _core-site.xml_. 
 
 **hdfs-site.xml configuration**
 Configure the location for storing node metadata, fsimage file and edit log file. Define NameNode and DataNode storage directories. Set _dfs.replication_ value of 3 to 1 since a single node cluster is being setup.
@@ -149,12 +151,12 @@ Add the following lines to _hdfs-site.xml_
 ```
 <configuration>
   <property>
-    <name>dfs.data.dir</name>
-    <value>/home/hdoop/dfsdata/namenode</value>
+    <name>dfs.namenode.data.dir</name>
+    <value>/home/pma/dfsdata/namenode</value>
   </property>
   <property>
-    <name>dfs.data.dir</name>
-    <value>/home/hdoop/dfsdata/datanode</value>
+    <name>dfs.datanode.data.dir</name>
+    <value>/home/pma/dfsdata/datanode</value>
    </property>
    <property>
     <name>dfs.replication</name>
@@ -162,9 +164,11 @@ Add the following lines to _hdfs-site.xml_
    </property>
 </configuration>
 ```
-Create the directory specified for `dfs.data.dir` in the system
+Create the directories specified above
 ```
-mkdir ~/hdoop/dfsdata/namenode
+mkdir /home/pma/dfsdata
+mkdir /home/pma/dfsdata/datanode
+mkdir /home/pma/dfsdata/namenode
 ```
 **mapred-site.xml configuration**
 Open _mapred-site.xml_ and set the MapReduce framework to YARN. 
@@ -241,4 +245,67 @@ The Hadoop user interface can be accessed using a browser with different address
 
 **YARN Resource Manager** : http://localhost:8088
 
-### WIP
+To monitor HDFS cluster, use `hdfs dfsadmin -report`
+To monitor YARN resources use `yarn node -list` and `yarn application -list`
+
+## Installing Spark
+
+Navigate to the home directory and run 
+```
+wget https://dlcdn.apache.org/spark/spark-3.2.1/spark-3.2.1-bin-hadoop3.2.tgz
+tar xzf spark-3.2.1-bin-hadoop3.2.tgz
+mv spark-3.2.1-bin-hadoop3.2 spark
+```
+The above commands will move all **Spark** binaries to folder _spark_ in the home directory of the current user. 
+
+Setup Spark bin and Hadoop environment variables in _.bashrc_ 
+
+```
+export PATH =/home/pma/spark/bin:$PATH
+export HADOOP_CONF_DIR=/home/pma/hadoop/etc/hadoop
+export SPARK_HOME=/home/pma/spark
+export LD_LIBRARY_PATH=$HADOOP_HOME/lib/native:$LD_LIBRARY_PATH
+```
+**Rename** Spark default template config file
+
+```
+mv $SPARK_HOME/conf/spark-defaults.conf.template $SPARK_HOME/conf/spark-defaults.conf
+```
+
+Set `spark.master` to YARN in `$SPARK_HOME/conf/spark-defaults.conf` and add the rest of the lines as mentioned below
+
+```
+spark.master yarn
+
+spark.eventLog.enabled true
+spark.eventLog.dir hdfs://127.0.0.1:9000/spark-logs
+
+spark.history.provider org.apache.spark.deploy.history.FsHistoryProvider
+spark.history.fs.logDirectory hdfs://127.0.0.1:9000/spark-logs
+spark.history.fs.update.interval 10s
+spark.history.ui.port 18080
+```
+
+Add the following to `$HADOOP_HOME/etc/hadoop/yarn-site.xml` to fix java8 + YARN issue.
+
+```
+<property>
+  <name>yarn.nodemanager.pmem-check-enabled</name>
+  <value>false</value>
+</property>
+
+<property>
+  <name>yarn.nodemanager.vmem-check-enabled</name>
+  <value>false</value>
+</property>
+```
+### Running History server, Spark-shell and PySpark
+
+```
+hdfs dfs -mkdir /spark-logs
+cd $SPARK_HOME/sbin
+./start-history-server.sh
+```
+The web interface can accessed using http://127.0.0.1:18080
+
+Run spark-shell by simply entering `spark-shell` in the terminal. Similary, for Pyspark use `pyspark`. 

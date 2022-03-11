@@ -31,7 +31,7 @@ sudo adduser pma
 # switch user to pma
 su - pma
 ```
-**Enable passwordless SSH for hdoop**
+**Enable passwordless SSH for pma**
 Run all these lines separately and go through the prompts as required.
 ```
 #Generate a public/private rsa key pair or SSH key pair
@@ -42,7 +42,7 @@ ssh-keygen -t rsa -P ""
 #Store the generated key as an authorized key
 cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 
-#Set permissions for user hdoop
+#Set permissions for user pma
 chmod 0600 ~/.ssh/authorized_keys
 
 #check if the user has access to localhost
@@ -80,7 +80,7 @@ nano .bashrc
 Once open, copy the following to the end of the file for changing the PATH variable and add others. Save the file once done. 
 
 ```
-export HADOOP_HOME=/home/hdoop/hadoop
+export HADOOP_HOME=/home/pma/hadoop
 export HADOOP_INSTALL=$HADOOP_HOME
 export HADOOP_MAPRED_HOME=$HADOOP_HOME
 export HADOOP_COMMON_HOME=$HADOOP_HOME
